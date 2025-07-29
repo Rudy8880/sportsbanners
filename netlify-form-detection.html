@@ -1,0 +1,19 @@
+<!-- netlify-form-detection.html -->
+<!-- This file exists solely for Netlify's build system to detect the form fields. -->
+<!-- It does not need to be linked or visible on your website. -->
+<form name="banner-design" method="POST" data-netlify="true" action="/success.html">
+    <input type="text" name="contactName">
+    <input type="email" name="contactEmail">
+    <input type="tel" name="contactPhone">
+    <input type="text" name="teamName">
+    <input type="text" name="teamColors">
+    <!-- Include multiple instances for array fields like playerName[] -->
+    <input type="text" name="playerName[]">
+    <input type="text" name="playerName[]">
+    <input type="text" name="playerName[]">
+    <input type="text" name="playerName[]">
+    <input type="text" name="playerName[]">
+    <textarea name="teamTitles"></textarea>
+    <textarea name="designRequirements"></textarea>
+    <input type="file" name="sponsorLogo[]">
+</form>
