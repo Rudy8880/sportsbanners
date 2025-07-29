@@ -27,25 +27,7 @@
 </head>
 <body class="antialiased bg-slate-50 text-slate-700">
 
-    <!-- HIDDEN FORM FOR NETLIFY DETECTION -->
-    <!-- This form is hidden from users but allows Netlify's build bot to detect all fields. -->
-    <form hidden netlify name="banner-design-hidden" method="POST" action="/success.html">
-        <input type="text" name="contactName">
-        <input type="email" name="contactEmail">
-        <input type="tel" name="contactPhone">
-        <input type="text" name="teamName">
-        <input type="text" name="teamColors">
-        <!-- Include multiple instances for array fields like playerName[] -->
-        <input type="text" name="playerName[]">
-        <input type="text" name="playerName[]">
-        <input type="text" name="playerName[]">
-        <input type="text" name="playerName[]">
-        <input type="text" name="playerName[]">
-        <textarea name="teamTitles"></textarea>
-        <textarea name="designRequirements"></textarea>
-        <input type="file" name="sponsorLogo[]"> <!-- Important for file uploads -->
-    </form>
-    <!-- END HIDDEN FORM -->
+    <!-- HIDDEN FORM FOR NETLIFY DETECTION IS REMOVED - NOT NEEDED WITH FORMSPREE -->
 
     <!-- Header Section -->
     <header class="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-8 shadow-lg rounded-b-3xl">
@@ -77,8 +59,10 @@
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="bg-white rounded-2xl shadow-xl p-8">
                 <h2 class="text-3xl font-bold text-center mb-8 text-blue-700">Banner Design Form</h2>
-                <!-- Your visible form - ensure it has name, method, data-netlify, and action attributes -->
-                <form id="bannerDesignForm" name="banner-design" method="POST" data-netlify="true" action="/success.html" class="space-y-6">
+                <!-- Formspree Integration: action attribute updated with your Formspree endpoint -->
+                <form id="bannerDesignForm" method="POST" action="https://formspree.io/f/xzzvglab" class="space-y-6">
+                    <!-- Hidden field for Formspree to set reply-to email -->
+                    <input type="hidden" name="_replyto" id="formspreeReplyTo">
 
                     <!-- Team Contact Information -->
                     <div class="space-y-4">
@@ -101,7 +85,7 @@
 
                     <!-- Team Details -->
                     <div class="space-y-4 pt-8">
-                        <h3 class="text-2xl font-semibold text-gray-800 border-b pb-2 mb-4">Team Details</h3>
+                        <h3 class="2xl font-semibold text-gray-800 border-b pb-2 mb-4">Team Details</h3>
                         <div class="form-group">
                             <label for="teamName" class="block mb-2 font-medium text-gray-900">Team Name</label>
                             <input type="text" id="teamName" name="teamName" class="w-full p-3 border border-gray-300 rounded-lg bg-white transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="The Champions" required>
@@ -146,7 +130,6 @@
                         <h3 class="text-2xl font-semibold text-gray-800 border-b pb-2 mb-4">Upload Team Sponsor Logo(s)</h3>
                         <div class="form-group">
                             <label for="sponsorLogo" class="block mb-2 font-medium text-gray-900">Choose File(s)</label>
-                            <!-- Important: For file uploads with Netlify Forms, ensure the name attribute is set and data-netlify-honeypot is not used on the file input -->
                             <input type="file" id="sponsorLogo" name="sponsorLogo[]" class="w-full p-3 border border-gray-300 rounded-lg bg-white transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" accept="image/*,.pdf" multiple>
                             <p class="text-sm text-gray-500 mt-2">Accepted formats: Images (JPG, PNG, GIF), PDF. Max file size: 5MB per file.</p>
                             <div id="selectedFiles" class="mt-2 text-sm text-gray-600"></div>
@@ -171,7 +154,7 @@
         </div>
     </footer>
 
-    <!-- Custom Modal Structure (No longer used for submission success, but kept for other potential uses) -->
+    <!-- Custom Modal Structure -->
     <div id="customModal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 hidden">
         <div class="bg-white rounded-lg shadow-xl p-6 m-4 max-w-sm w-full transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
             <div class="flex justify-between items-center mb-4">
@@ -198,8 +181,11 @@
             const bannerDesignForm = document.getElementById('bannerDesignForm');
             const sponsorLogoInput = document.getElementById('sponsorLogo');
             const selectedFilesDiv = document.getElementById('selectedFiles');
+            const formspreeReplyTo = document.getElementById('formspreeReplyTo');
+            const contactEmailInput = document.getElementById('contactEmail');
 
-            // Modal elements (still available for other uses, but not for form submission success)
+
+            // Modal elements
             const customModal = document.getElementById('customModal');
             const modalTitle = document.getElementById('modalTitle');
             const modalMessage = document.getElementById('modalMessage');
@@ -277,14 +263,57 @@
                 }
             });
 
+            // Update _replyto field when contact email changes
+            contactEmailInput.addEventListener('input', function() {
+                formspreeReplyTo.value = contactEmailInput.value;
+            });
+
             // Initial call to set up remove button visibility for the first row
             updateRemoveButtonsVisibility();
 
-            // IMPORTANT: Remove the custom JavaScript submission handler for Netlify Forms to work
-            // The form will now submit directly to Netlify's backend.
-            bannerDesignForm.addEventListener('submit', function(event) {
-                // event.preventDefault(); // REMOVED for Netlify Forms
-                // showModal(...) and bannerDesignForm.reset() will be handled by Netlify's redirect
+            // Form submission handler for Formspree
+            bannerDesignForm.addEventListener('submit', async function(event) {
+                event.preventDefault(); // Prevent default form submission to handle with fetch
+
+                // Set the _replyto field before sending
+                formspreeReplyTo.value = contactEmailInput.value;
+
+                const form = event.target;
+                const formData = new FormData(form);
+
+                try {
+                    const response = await fetch(form.action, {
+                        method: form.method,
+                        body: formData,
+                        headers: {
+                            'Accept': 'application/json' // Important for Formspree to return JSON
+                        }
+                    });
+
+                    if (response.ok) {
+                        showModal('Success!', 'Your banner design request has been submitted! We will contact you within 24 hours.');
+                        bannerDesignForm.reset(); // Clear the form after submission
+                        selectedFilesDiv.innerHTML = ''; // Clear selected files display
+                        // Reset player rows to just one
+                        playersContainer.innerHTML = `
+                            <div class="flex gap-4 mb-4 items-center player-row">
+                                <input type="text" name="playerName[]" class="flex-1 p-3 border border-gray-300 rounded-lg bg-white transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Player's Full Name" required>
+                                <button type="button" class="bg-red-500 text-white py-2 px-3 rounded-lg font-medium transition-all duration-200 ease-in-out flex-shrink-0 hover:bg-red-600 remove-player-btn hidden">Remove</button>
+                            </div>
+                        `;
+                        updateRemoveButtonsVisibility();
+                    } else {
+                        const data = await response.json();
+                        if (data.errors) {
+                            showModal('Error!', `There was an error submitting your request: ${data.errors.map(e => e.message).join(', ')}. Please try again.`);
+                        } else {
+                            showModal('Error!', 'There was an error submitting your request. Please try again.');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Submission error:', error);
+                    showModal('Error!', 'There was a network error submitting your request. Please check your internet connection and try again.');
+                }
             });
         });
     </script>
